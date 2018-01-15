@@ -1,6 +1,14 @@
 import datetime
 
 
+from flask import Flask
+from flask_ask import Ask, statement
+
+
+app = Flask(__name__)
+ask = Ask(app, '/')
+
+
 NORMAL = 'normal'
 WEIRD = 'weird'
 FLEX = 'flex'
@@ -65,7 +73,37 @@ schedule = [
     for entry in raw_schedule
 ]
 
+
 def get_upcoming_entry():
     for entry in schedule:
         if entry['date'] >= datetime.date.today():
             return entry
+
+
+
+@ask.intent('GetScheduleIntent')
+def get_schedule():
+    schedule_entry = get_upcoming_entry()
+
+    if schedule_entry['date'] == datetime.date.today():
+        day_string = 'today'
+    else:
+        day_string = schedule_entry['date'].strftime('%A, %B %-d')
+
+    if schedule_entry['schedule'] == NORMAL:
+        schedule_string = 'normal, which means that class starts at 9:43'
+    elif schedule_entry['schedule'] == FLEX:
+        schedule_string = 'flex, which means that class starts at 9:30'
+    else:
+        schedule_string = 'weird, so you should ask tamara what time to come in'
+
+    message = "You have class {0}. The schedule is {1}.".format(day_string, schedule_string)
+
+    return statement(message).simple_card('Schedule', message)
+
+
+
+
+
+if __name__ == '__main__':
+    app.run()
