@@ -1,4 +1,5 @@
 import datetime
+from pytz import timezone
 
 
 from flask import Flask
@@ -85,8 +86,13 @@ def get_upcoming_entry():
 def get_schedule():
     schedule_entry = get_upcoming_entry()
 
-    if schedule_entry['date'] == datetime.date.today():
+    tz = timezone('America/Los_Angeles')
+    today = tz.fromutc(datetime.datetime.utcnow()).date()
+
+    if schedule_entry['date'] == today:
         day_string = 'today'
+    elif (schedule_entry['date'] - today).days == 1:
+        day_string = 'tomorrow'
     else:
         day_string = schedule_entry['date'].strftime('%A, %B %-d')
 
